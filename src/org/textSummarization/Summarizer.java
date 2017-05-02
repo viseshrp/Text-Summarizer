@@ -1,4 +1,17 @@
- 
+
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,10 +35,10 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
-/*Created by Viseshprasad Rajendraprasad
-vrajend1@uncc.edu
-*/
-
+/*
+ * Performs extractive summarization where sentences are filtered out
+ * based on semantically similar terms in the final list.
+ * */
 public class Summarizer extends Configured implements Tool {
 
 	private static final Logger LOG = Logger.getLogger(Summarizer.class);
@@ -36,29 +49,29 @@ public class Summarizer extends Configured implements Tool {
 		Configuration configuration = job.getConfiguration(); // create a
 																// configuration
 																// reference
-        String termList="";
+		String termList = "";
 
-		try{
+		try {
 			FileSystem fs = FileSystem.get(configuration);
 			Path path = new Path(args[6]);
-			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(path)));
-            String term;
-            term=br.readLine();
-            int i = 0;
-            while (i < 5){
-                    termList += term.trim() + ",";
-                    term=br.readLine();
-                    i++;
-            }
-    }catch(Exception e){
-    	e.printStackTrace();
-    }
-		
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
+			String term;
+			term = br.readLine();
+			int i = 0;
+			while (i < 5) {
+				termList += term.trim() + ",";
+				term = br.readLine();
+				i++;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		configuration.set("termList", termList); // use
-																	// configuration
-																	// object to
-																	// pass file
-																	// count
+													// configuration
+													// object to
+													// pass file
+													// count
 
 		job.setJarByClass(this.getClass());
 		job.setMapperClass(Map.class);
@@ -72,7 +85,7 @@ public class Summarizer extends Configured implements Tool {
 		job.setOutputValueClass(Text.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
-		//job.setNumReduceTasks(1);
+		// job.setNumReduceTasks(1);
 
 		return job.waitForCompletion(true) ? 0 : 1;
 	}
@@ -83,15 +96,13 @@ public class Summarizer extends Configured implements Tool {
 
 			String termList = context.getConfiguration().get("termList");
 			String[] termListArray = termList.split(",");
-			
-			for (String term: termListArray){
-			    System.out.println("termmmmm"+term);
-				if(lineText.toString().toLowerCase().contains(" "+term.toLowerCase()+" ")){
+			for (String term : termListArray) {
+				if (lineText.toString().toLowerCase().contains(" " + term.toLowerCase() + " ")) {
 					context.write(new Text("key"), lineText);
 					break;
 				}
 			}
-				}
+		}
 	}
 
 	public static class Reduce extends Reducer<Text, Text, Text, Text> {
@@ -99,14 +110,10 @@ public class Summarizer extends Configured implements Tool {
 		public void reduce(Text word, Iterable<Text> iterable, Context context)
 				throws IOException, InterruptedException {
 
-			// Loop through postings list to accumulate and find the document
-			// frequency
 			for (Text text : iterable) {
 				// write to output
-				System.out.println("Reducer value"+text);
 				context.write(new Text(""), text);
 			}
 		}
-
-		}
 	}
+}

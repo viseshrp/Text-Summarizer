@@ -1,4 +1,18 @@
- 
+
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,8 +37,8 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-/*Created by Viseshprasad Rajendraprasad
-vrajend1@uncc.edu
+/*
+ * Calculate TFIDF and filter top terms in each file
 */
 
 public class TFIDF extends Configured implements Tool {
@@ -64,9 +78,9 @@ public class TFIDF extends Configured implements Tool {
 		job.setMapOutputValueClass(Text.class);
 
 		int success = job.waitForCompletion(true) ? 0 : 1;
-		
+
 		// Job to convert document to a vector of top 49 TFIDFs
-		if(success == 0) {
+		if (success == 0) {
 			Job docVectorJob = Job.getInstance(getConf(), " tfidf2 ");
 
 			docVectorJob.setJarByClass(this.getClass());
@@ -85,9 +99,9 @@ public class TFIDF extends Configured implements Tool {
 			success = docVectorJob.waitForCompletion(true) ? 0 : 1;
 
 		}
-		
+
 		return success;
-		
+
 	}
 
 	public static class Map extends Mapper<LongWritable, Text, Text, Text> {
@@ -168,20 +182,23 @@ public class TFIDF extends Configured implements Tool {
 			}
 		}
 	}
-	
+
+	/*
+	 * Map and Reduce represent files in terms of top terms
+	 */
 	public static class MapDocVector extends Mapper<LongWritable, Text, Text, Text> {
 
 		public void map(LongWritable offset, Text lineText, Context context) throws IOException, InterruptedException {
 
-			//Split input to get filename and tfidf
-			String[] lineInputSplit = lineText.toString().split("#####"); 
-		
+			// Split input to get filename and tfidf
+			String[] lineInputSplit = lineText.toString().split("#####");
+
 			String fileNamePlusTFIDF = lineInputSplit[1];
-			
+
 			String[] fileNameAndTFIDFArray = fileNamePlusTFIDF.split("\\s+");
-			
+
 			String fileName = fileNameAndTFIDFArray[0];
-			
+
 			String TFIDF = fileNameAndTFIDFArray[1];
 
 			context.write(new Text(fileName), new Text(TFIDF));
@@ -189,41 +206,38 @@ public class TFIDF extends Configured implements Tool {
 	}
 
 	public static class ReduceDocVector extends Reducer<Text, Text, Text, Text> {
-		
-		
+
 		@Override
 		public void reduce(Text word, Iterable<Text> vectorIterable, Context context)
 				throws IOException, InterruptedException {
 
 			ArrayList<Double> vectorList = new ArrayList<>();
-			
+
 			String finalVectorList = "";
-			
-			// Loop through postings list to accumulate and find the document
-			// frequency
+
 			for (Text tfidf : vectorIterable) {
 				vectorList.add(Double.valueOf(tfidf.toString()));
 			}
-			
+
 			Collections.sort(vectorList);
 			Collections.reverse(vectorList);
-			
+
 			for (int i = 0; i < 49; i++) {
 				String tfidf = String.valueOf(vectorList.get(i));
-				
-				if(i==0){
+
+				if (i == 0) {
 					finalVectorList += "[" + tfidf + ",";
 				} else {
 					finalVectorList += tfidf + ",";
 				}
 			}
-			
+
 			finalVectorList += "]";
-			
+
 			String output = word.toString() + "=" + finalVectorList;
-			
+
 			context.write(new Text(""), new Text(output));
-			
-			}
+
 		}
 	}
+}

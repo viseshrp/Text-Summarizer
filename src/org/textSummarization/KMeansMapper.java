@@ -1,4 +1,17 @@
- 
+
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,71 +30,73 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.io.Text;
 
-// first iteration, k-random centers, in every follow-up iteration we have new calculated centers
+/*
+ * Mapper class to emit cluster center as key and vectors as values
+ * */
 public class KMeansMapper extends Mapper<LongWritable, Text, ClusterCenter, Text> {
 
 	private final List<ClusterCenter> centers = new ArrayList<>();
 	private DistanceMeasurer distanceMeasurer;
 
+	/*
+	 * first iteration, k-random centers, in every follow-up iteration we have
+	 * new calculated centers
+	 */
 	@SuppressWarnings("deprecation")
 	@Override
 	protected void setup(Context context) throws IOException, InterruptedException {
-			super.setup(context);
-			Configuration conf = context.getConfiguration();
-			Path centroids = new Path(conf.get("centroid.path"));
-			FileSystem fs = FileSystem.get(conf);
+		super.setup(context);
+		Configuration conf = context.getConfiguration();
+		Path centroids = new Path(conf.get("centroid.path"));
+		FileSystem fs = FileSystem.get(conf);
 
-			try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, centroids, conf)) {
-				ClusterCenter key = new ClusterCenter();
-				IntWritable value = new IntWritable();
-				int index = 0;
-				while (reader.next(key, value)) {
-					ClusterCenter clusterCenter = new ClusterCenter(key);
-					clusterCenter.setClusterIndex(index++);
-					centers.add(clusterCenter);
-				}
+		try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, centroids, conf)) {
+			ClusterCenter key = new ClusterCenter();
+			IntWritable value = new IntWritable();
+			int index = 0;
+			while (reader.next(key, value)) {
+				ClusterCenter clusterCenter = new ClusterCenter(key);
+				clusterCenter.setClusterIndex(index++);
+				centers.add(clusterCenter);
 			}
-			distanceMeasurer = new ManhattanDistance();
 		}
+		distanceMeasurer = new ManhattanDistance();
+	}
 
 	@Override
-	protected void map(LongWritable key, Text value, Context context) throws IOException,
-			InterruptedException {
+	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 		ClusterCenter nearest = null;
 		double nearestDistance = Double.MAX_VALUE;
 		String line = value.toString();
 		String fileName, vectorValues;
 		String[] fileNameAndValues;
 		String[] sec = line.split("\t");
-		if(sec.length==1){
+		if (sec.length == 1) {
 			fileNameAndValues = line.split("=");
 			fileName = fileNameAndValues[0];
 			vectorValues = fileNameAndValues[1];
-			//System.out.println("mapper filename"+fileName+"values"+vectorValues);
-		}else{
+		} else {
 			fileNameAndValues = sec[1].split("=");
 			fileName = fileNameAndValues[0];
 			vectorValues = fileNameAndValues[1];
-			//System.out.println("mapper filename"+fileName+"values"+vectorValues);
 		}
 		Pattern p = Pattern.compile("\\[(.*?)\\]");
 		Matcher m = p.matcher(vectorValues);
-		String v=null;
-		while(m.find()) {
-		    v = m.group(1);
+		String v = null;
+		while (m.find()) {
+			v = m.group(1);
 		}
-		//String[] vec1 = vectors.split("[(.*?)]");
-		//System.out.println("brackets content"+v);
 		String[] vec = v.split(",");
-		double[] vecArray = new double[vec.length];		
-		for(int i=0;i<vec.length;i++){
-			String trim = vec[i].replaceAll("\\s+","");
+		double[] vecArray = new double[vec.length];
+		for (int i = 0; i < vec.length; i++) {
+			String trim = vec[i].replaceAll("\\s+", "");
 			vecArray[i] = Double.parseDouble(trim);
 		}
 		VectorWritable vw = new VectorWritable(vecArray);
-		System.out.println("mapper VW"+vw+"dim"+vw.getVector().getDimension());
 		for (ClusterCenter c : centers) {
+			// calculating manhattan distance between cluster center and vector.
 			double dist = distanceMeasurer.measureDistance(c.getCenterVector(), vw.getVector());
+			// assign vector to the nearest center.
 			if (nearest == null) {
 				nearest = c;
 				nearestDistance = dist;
@@ -92,8 +107,7 @@ public class KMeansMapper extends Mapper<LongWritable, Text, ClusterCenter, Text
 				}
 			}
 		}
-		String finalValue = fileName +"="+ vw;
+		String finalValue = fileName + "=" + vw;
 		context.write(nearest, new Text(finalValue));
 	}
-
 }

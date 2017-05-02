@@ -1,4 +1,17 @@
- 
+
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
 
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -17,15 +30,16 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-/*Created by Viseshprasad Rajendraprasad
-vrajend1@uncc.edu
+/*
+ *
+ * Class to compute Term Frequency of terms in a document.
+ *
 */
 
 public class TermFrequency extends Configured implements Tool {
 
 	private static final Logger LOG = Logger.getLogger(TermFrequency.class);
 
-	
 	public int run(String[] args) throws Exception {
 		Job job = Job.getInstance(getConf(), " termfrequency ");
 		job.setJarByClass(this.getClass());

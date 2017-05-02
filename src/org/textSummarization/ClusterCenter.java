@@ -1,4 +1,17 @@
- 
+
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -6,7 +19,9 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.WritableComparable;
 
-
+/*
+ * Model to represent center of the KMeans cluster
+ * */
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
 	private DoubleVector center;

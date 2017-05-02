@@ -1,3 +1,16 @@
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
  
 
 import java.io.DataInput;
@@ -7,9 +20,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 /**
- * Writable and comparable wrapper for dense vectors. <br/>
+ * Writable and comparable wrapper for dense vectors.
  * 
- * @author thomas.jungblut
  * 
  */
 public final class VectorWritable implements WritableComparable<VectorWritable> {
@@ -27,10 +39,6 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
 	public VectorWritable(DenseDoubleVector v) {
 		this.vector = v;
 	}
-
-	/*
-	 * Some oldschool compatibility convenience constructors
-	 */
 
 	public VectorWritable(double x) {
 		this.vector = new DenseDoubleVector(new double[] { x });

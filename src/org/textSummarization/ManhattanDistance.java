@@ -1,6 +1,20 @@
- 
+/*=============================================================================
+|   Assignment:  Final Project - Multiple Document Summarization
+|       Author:  Group7 - (Sampath, Ajay, Visesh)
+|       Grader:  Walid Shalaby
+|
+|       Course:  ITCS 6190
+|   Instructor:  Srinivas Akella
+|
+|     Language:  Java 
+|     Version :  1.8.0_101
+|                
+| Deficiencies:  No logical errors.
+*===========================================================================*/
 
-
+/*
+ * Computes Manhattan distance between two vectors
+ * */
 public final class ManhattanDistance implements DistanceMeasurer {
 
 	@Override
