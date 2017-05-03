@@ -161,18 +161,18 @@ public class TextSummarizationDriver extends Configured implements Tool {
 			return 1;
 		}
 		// Combine all topics from LDA Phase
-		boolean combineTopics = combineTopics("/user/vpcl/project/output/topics", args[6]);
+		boolean combineTopics = combineTopics(args[11], args[6]);
 		if (!combineTopics) {
 			return 1;
 		}
 		System.out.println("************* LDA ENDS ****************");
 		System.out.println("************* SEMANTIC TERM STARTS****************");
 		System.setProperty("wordnet.database.dir", args[9]);
-		boolean createdSemanticTerms = createSemanticTerms(args[6], "/user/vpcl/project/output/semanticTerms");
+		boolean createdSemanticTerms = createSemanticTerms(args[6], args[12]);
 		if (!createdSemanticTerms) {
 			return 1;
 		}
-		boolean isSorted = cleanAndSorting("/user/vpcl/project/output/semanticTerms", args[7]);
+		boolean isSorted = cleanAndSorting(args[12], args[7]);
 		if (!isSorted) {
 			return 1;
 		}
@@ -194,9 +194,9 @@ public class TextSummarizationDriver extends Configured implements Tool {
 		int iteration = 1;
 		conf.set("num.iteration", iteration + "");
 		Path in = new Path(args[4]);
-		Path center = new Path("/user/vpcl/project/output/Center/inputCenter.txt");
+		Path center = new Path(args[13]);
 		conf.set("centroid.path", center.toString());
-		Path out = new Path("/user/vpcl/project/output/Iterations/depth_1");
+		Path out = new Path(args[14]);
 		Job job = Job.getInstance(conf);
 		job.setJobName("KMeans Clustering");
 		job.setMapperClass(KMeansMapper.class);
@@ -222,8 +222,8 @@ public class TextSummarizationDriver extends Configured implements Tool {
 			job.setMapperClass(KMeansMapper.class);
 			job.setReducerClass(KMeansReducer.class);
 			job.setJarByClass(KMeansMapper.class);
-			in = new Path("/user/vpcl/project/output/Iterations/depth_" + (iteration - 1) + "/");
-			out = new Path("/user/vpcl/project/output/Iterations/depth_" + iteration);
+			in = new Path(args[15] + (iteration - 1) + "/");
+			out = new Path(args[15] + iteration);
 			FileInputFormat.addInputPath(job, in);
 			FileOutputFormat.setOutputPath(job, out);
 			job.setOutputKeyClass(ClusterCenter.class);
@@ -233,7 +233,7 @@ public class TextSummarizationDriver extends Configured implements Tool {
 			counter = job.getCounters().findCounter(KMeansReducer.Counter.CONVERGED).getValue();
 			iter++;
 		}
-		Path result = new Path("/user/vpcl/project/output/Iterations/depth_" + (iteration - 1) + "/");
+		Path result = new Path(args[15] + (iteration - 1) + "/");
 		FileStatus[] stati = fs.listStatus(result);
 		for (FileStatus status : stati) {
 			if (!status.isDirectory()) {
@@ -245,14 +245,14 @@ public class TextSummarizationDriver extends Configured implements Tool {
 					job.setMapperClass(KMeansMapperFinal.class);
 					job.setReducerClass(KMeansReducerFinal.class);
 					job.setJarByClass(KMeansMapper.class);
-					out = new Path("/user/vpcl/project/output/KMeansOutput"); // intermediate
+					out = new Path(args[16]); // intermediate
 					FileInputFormat.addInputPath(job, result);
 					FileOutputFormat.setOutputPath(job, out);
 					job.setOutputKeyClass(Text.class);
 					job.setOutputValueClass(Text.class);
 					if (job.waitForCompletion(true)) {
 						try {
-							Path kMeanFiles = new Path("/user/vpcl/project/output/KMeansOutput/part-r-00000");
+							Path kMeanFiles = new Path(args[17]);
 							BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(kMeanFiles)));
 							String line;
 							line = br.readLine();
@@ -261,7 +261,7 @@ public class TextSummarizationDriver extends Configured implements Tool {
 								String[] files = line.split("\t");
 								String[] fileNames = files[1].split(",");
 								String clus = "Cluster" + i;
-								Path newFolderPath = new Path("/user/vpcl/project/output/kmeans/" + clus);
+								Path newFolderPath = new Path(args[18] + clus);
 								fs.mkdirs(newFolderPath); // Create new
 															// Directory
 								for (String fileName : fileNames) {
@@ -343,7 +343,7 @@ public class TextSummarizationDriver extends Configured implements Tool {
 				job.setJarByClass(this.getClass());
 				Path path = status.getPath();
 				FileInputFormat.addInputPath(job, path);
-				FileOutputFormat.setOutputPath(job, new Path("/user/vpcl/project/output/topics/topic" + i)); // intermediate
+				FileOutputFormat.setOutputPath(job, new Path(args[19] + i)); // intermediate
 				job.setMapOutputKeyClass(Text.class);
 				job.setMapOutputValueClass(Text.class);
 				job.setMapperClass(LDAMapper.class);
